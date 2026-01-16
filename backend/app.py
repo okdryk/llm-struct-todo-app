@@ -10,7 +10,8 @@ app = FastAPI(title="LLM Structured Output Todo Demo")
 # 開発時にフロントエンド（Viteなど）からアクセスできるようCORSを許可します
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # 開発中は全許可
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

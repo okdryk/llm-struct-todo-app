@@ -21,6 +21,9 @@ SYSTEM_PROMPT = """
 
 JSON以外の文章は一切出力しないでください。
 予定は日本語で記述してください。
+具体例を示します。
+{"result":"added","todo":{"id":2,"title":"部屋を片付ける","completed":false,"due_date":"2026-01-22"}}
+{"result":"completed","todo":{"id":1,"title":"レポートを提出する","completed":true,"due_date":"2026-01-22"}}
 """
 
 
