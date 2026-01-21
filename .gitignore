@@ -13,6 +13,7 @@ build/
 venv/
 .venv/
 todo-venv/
+llm-venv/
 pip-wheel-metadata/
 
 # Byte-compiled / optimized / DLL files
