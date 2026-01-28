@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from date_utils import normalize_due_date
 from llm import parse_user_input
 from todo import add_todo, complete_todo, list_todos, complete_todo_by_id, update_todo_by_id
 
@@ -29,7 +30,6 @@ def create_todo(payload: CreateTodo):
     """
     # 正規化: 相対表現（"明日まで" など）を ISO 日付に変換します
     try:
-        from date_utils import normalize_due_date
         norm = normalize_due_date(payload.due_date)
     except Exception:
         norm = payload.due_date
@@ -51,7 +51,6 @@ def update_todo_endpoint(todo_id: int, payload: UpdateTodo):
     norm = None
     if payload.due_date is not None:
         try:
-            from date_utils import normalize_due_date
             norm = normalize_due_date(payload.due_date)
         except Exception:
             norm = payload.due_date
@@ -79,14 +78,15 @@ def handle_input(text: str):
             if not action.title or action.title.strip() == "":
                 print("[handle_input] skipped add: missing title", action)
                 return {"result": "invalid", "reason": "missing_title"}
-
-            todo = add_todo(action.title, action.due_date)
-            # デバッグログ
+            
+            norm = None
             try:
-                print(
-                    f"[handle_input] added todo id={todo.id} title={todo.title} total={len(list_todos())}")
-            except Exception:
-                pass
+                norm = normalize_due_date(action.due_date)
+            except Exception as e:
+                print("normalize_due_date error:", e)
+                norm = action.due_date
+            todo = add_todo(action.title, norm)
+
             return {"result": "added", "todo": todo}
 
         case "complete_todo":
@@ -101,7 +101,6 @@ def handle_input(text: str):
                 return {"result": "invalid", "reason": "missing_target"}
 
             # 正規化
-            from date_utils import normalize_due_date
             norm = None
             if action.due_date is not None:
                 norm = normalize_due_date(action.due_date)
