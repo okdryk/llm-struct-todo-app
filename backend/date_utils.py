@@ -3,22 +3,12 @@ from typing import Optional
 import re
 from datetime import datetime
 
-try:
-    import dateparser
-except Exception:
-    dateparser = None
+from ja_timex import TimexParser
 
 ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def normalize_due_date(due: Optional[str], *, base: Optional[datetime] = None) -> Optional[str]:
-    """Normalize a user/LLM supplied due date.
-
-    - If `due` is None or already an ISO date YYYY-MM-DD, return as-is.
-    - Otherwise try to parse natural language (Japanese supported) using dateparser
-      and return an ISO date string (YYYY-MM-DD) on success.
-    - On failure, return the original value.
-    """
     if due is None:
         return None
 
@@ -29,19 +19,22 @@ def normalize_due_date(due: Optional[str], *, base: Optional[datetime] = None) -
     if ISO_DATE_RE.match(due):
         return due
 
-    if dateparser is None:
-        # dateparser not available, return original
-        return due
+    reference = base or datetime.now()
+    parser = TimexParser(reference=reference)
 
-    settings = {
-        "PREFER_DATES_FROM": "future",
-        "RETURN_AS_TIMEZONE_AWARE": False,
-    }
-    if base is not None:
-        settings["RELATIVE_BASE"] = base
+    try:
+        timexes = parser.parse(due)
+    except Exception:
+        timexes = []
 
-    dt = dateparser.parse(due, settings=settings, languages=[
-                          "ja"])  # type: ignore[arg-type]
-    if dt is None:
-        return due
-    return dt.date().isoformat()
+    for timex in timexes:
+        if timex.type == "DATE":
+            dt = timex.to_datetime()
+            if dt:
+                return dt.date().isoformat()
+        elif timex.type in ("DURATION", "TIME"):
+            dt = timex.to_datetime()
+            if dt:
+                return dt.date().isoformat()
+
+    return due
