@@ -24,7 +24,7 @@ class TodoAction(BaseModel):
         description="対象となるタスク名 / 更新後のタイトル"
     )
     due_date: Optional[str] = Field(
-        description="期限（相対表現可、ISO形式 YYYY-MM-DD）"
+        description="期限（ISO形式 YYYY-MM-DD）。相対表現はそのままにする。"
     )
     completed: Optional[bool] = Field(
         description="完了フラグ（true/false）、指定があれば更新される"

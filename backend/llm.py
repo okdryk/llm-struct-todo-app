@@ -21,9 +21,31 @@ SYSTEM_PROMPT = """
 
 JSON以外の文章は一切出力しないでください。
 予定は日本語で記述してください。
+相対表現で表された表現はそのままにしてください。
 具体例を示します。
-{"result":"added","todo":{"id":2,"title":"部屋を片付ける","completed":false,"due_date":"2026-01-22"}}
-{"result":"completed","todo":{"id":1,"title":"レポートを提出する","completed":true,"due_date":"2026-01-22"}}
+
+入力：2026-01-24に資料を作る
+{
+  "action": "add_todo",
+  "id": null,
+  "title": "資料を作る",
+  "due_date": "2026-01-24",
+  "completed": false,
+  "needs_clarification": false,
+  "question": null
+}
+
+入力：明日までにカレーを作る
+{
+  "action": "add_todo",
+  "id": null,
+  "title": "カレーを作る",
+  "due_date": "明日",
+  "completed": false,
+  "needs_clarification": false,
+  "question": null
+}
+
 """
 
 
@@ -47,7 +69,7 @@ def parse_user_input(text: str, now: Optional[str] = None) -> TodoAction:
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": text},
-            {"role": "user", "content": timestamp_message},
+            # {"role": "user", "content": timestamp_message},
         ],
         response_format={
             "type": "json_schema",
@@ -56,6 +78,9 @@ def parse_user_input(text: str, now: Optional[str] = None) -> TodoAction:
                 "schema": schema,
             },
         },
+        max_tokens=512,
+        temperature=0.2,
+        top_p=0.95
     )
 
     content = response.choices[0].message.content
